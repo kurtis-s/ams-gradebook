@@ -1,6 +1,7 @@
 import argparse
 import gspread
 import httplib2
+import fileinput
 
 from oauth2client.file import Storage
 from oauth2client.client import flow_from_clientsecrets
@@ -139,9 +140,11 @@ if __name__=='__main__':
     authorizor = Authorizor()
     credentials = authorizor.get_credentials()
     gc = gspread.authorize(credentials)
-    #wks = gc.open("gradetestbook").Sheet1
     wks = gc.open_by_key('1SqrL7FigyTy9jhZ9pEDBYplRQaXnDf_Iz-8-MT1LN7o').sheet1
-    print "value in B2"
-    print wks.acell('B2').value
-    print "done"
-    g = Grader(wks, "HW 1: Due Oct 10")
+
+    grade_inputs = fileinput.input()
+    assignment_label = grade_inputs.next().strip()
+    g = Grader(wks, assignment_label)
+    for line in grade_inputs:
+        first_initial, last_name, score = line.split()
+        g.update_grade(first_initial, last_name, score)

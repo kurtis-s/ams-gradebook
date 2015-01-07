@@ -1,3 +1,4 @@
 credentials_file
 client_secrets.json
 *.pyc
+*.swp
