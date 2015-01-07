@@ -65,6 +65,8 @@ class Grader(object):
         self.missing_students = []
         #A list to keep track of students whose grades we couldn't merge because multiple matches were found
         self.multiple_match_students = []
+        #A list of cells with grades to update
+        self.grades = []
 
     @property
     def grade_column_header(self):
@@ -134,7 +136,12 @@ class Grader(object):
         elif len(student_row) > 1:
             self.multiple_match_students.append("{} {}".format(first_initial, last_name))
         else:
-            self.worksheet.update_cell(student_row[0], self._assignment_column_index, score)
+            cell = self.worksheet.cell(student_row[0], self._assignment_column_index)
+            cell.value = score
+            self.grades.append(cell)
+
+    def update_grades(self):
+        self.worksheet.update_cells(self.grades)
 
 if __name__=='__main__':
     authorizor = Authorizor()
@@ -148,3 +155,4 @@ if __name__=='__main__':
     for line in grade_inputs:
         first_initial, last_name, score = line.split()
         g.update_grade(first_initial, last_name, score)
+    g.update_grades()
