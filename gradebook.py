@@ -132,9 +132,9 @@ class Grader(object):
     def update_grade(self, first_initial, last_name, score):
         student_row = self._get_row_indices_for_name(first_initial, last_name)
         if len(student_row) == 0:
-            self.missing_students.append("{} {}".format(first_initial, last_name))
+            self.missing_students.append("{} {} {}\n".format(first_initial, last_name, score))
         elif len(student_row) > 1:
-            self.multiple_match_students.append("{} {}".format(first_initial, last_name))
+            self.multiple_match_students.append("{} {} {}\n".format(first_initial, last_name, score))
         else:
             cell = self.worksheet.cell(student_row[0], self._assignment_column_index)
             cell.value = score
@@ -142,6 +142,29 @@ class Grader(object):
 
     def update_grades(self):
         self.worksheet.update_cells(self.grades)
+
+    def save_unmergeable_grades(self):
+        """Stores the grades for students that could not be merged to a file
+        and prints a warning message"""
+
+        missing_student_message = "Failed to merge the following grades because the student's name was not found in the spreadsheet:\n"
+        multiple_students_message = "Failed to merge the following grades because multiple matches for the student's name were found in the spreadsheet:\n"
+
+        if (len(self.missing_students) > 0) or (len(self.multiple_match_students) > 0):
+            with open('unmergeable_students.txt' ,'w') as unmergeable_file:
+                if(len(self.missing_students) > 0):
+                    unmergeable_file.write(missing_student_message)
+                    unmergeable_file.writelines(self.missing_students)
+                    unmergeable_file.write("\n")
+
+                if(len(self.multiple_match_students) > 0):
+                    unmergeable_file.write(multiple_students_message)
+                    unmergeable_file.writelines(self.multiple_match_students)
+
+            #Print out the grades that couldn't be merged the console for convenience
+            with open('unmergeable_students.txt' ,'r') as unmergeable_file:
+                print unmergeable_file.read()
+
 
 if __name__=='__main__':
     authorizor = Authorizor()
@@ -156,3 +179,4 @@ if __name__=='__main__':
         first_initial, last_name, score = line.split()
         g.update_grade(first_initial, last_name, score)
     g.update_grades()
+    g.save_unmergeable_grades()
