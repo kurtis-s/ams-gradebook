@@ -17,7 +17,7 @@ The first line of `grades_input_file.txt` should be the assignment's header in t
 Each line thereafter consists of the student's first initial, last name, and grade separated by
 spaces.  An example grades file, example_grades.txt, is provided.
 
-Before running the script, the gradebook's Google sheet's key must be set in spreadsheetkey.py.
+Before running the script, the gradebook's Google sheets key must be set in spreadsheetkey.py.
 Grades that could not be merged successfully into the gradebook are stored in unmergeable_students.txt
 after the script has finished.
 
