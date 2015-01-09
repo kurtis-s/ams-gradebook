@@ -3,7 +3,7 @@ A script to ease entering grades into Google sheets.
 
 # Usage
 This script makes entering grades a little easier.  Normally entering grades into Google sheets
-requires alphabetizing the assignments by hand, and manually inputting the grades into a 
+requires alphabetizing the assignments by hand and manually inputting the grades into a 
 gradebook spreadsheet hosted on Google sheets.  The script provided takes a list of student's
 first initials, last names, and scores and merges them into the Google sheet gradebook
 using the [Google sheets API](https://developers.google.com/google-apps/spreadsheets/).
