@@ -1,4 +1,4 @@
 credentials_file
-client_secrets.json
+unmergeable_students.txt
 *.pyc
 *.swp

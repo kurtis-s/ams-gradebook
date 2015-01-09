@@ -2,18 +2,24 @@ import argparse
 import gspread
 import httplib2
 import fileinput
+import spreadsheetkey
 
 from oauth2client.file import Storage
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client import tools
 
 class Authorizor(object):
-    SCOPE = ['https://spreadsheets.google.com/feeds', 'https://docs.google.com/feeds']
-    CLIENT_SECRETS_JSON_PATH = 'client_secrets.json'
-    CREDENTIALS_FILE_PATH = 'credentials_file'
+    """Used to get OAuth2 credentials.  
+    Looks for OAuth2 parameters in the path specified by the
+    client_secrets_json_path (see https://developers.google.com/api-client-library/python/guide/aaa_client_secrets).
+    Looks for and stores the credentials in the path specified by the credentials_file_path attribute.
+    """
+    scope = ['https://spreadsheets.google.com/feeds', 'https://docs.google.com/feeds']
+    client_secrets_json_path = 'client_secrets.json'
+    credentials_file_path = 'credentials_file'
 
     def __init__(self):
-        storage = Storage(self.CREDENTIALS_FILE_PATH)
+        storage = Storage(self.credentials_file_path)
         self.storage = storage
         self.credentials = storage.get()
 
@@ -26,7 +32,7 @@ class Authorizor(object):
     def _authorize_application(self):
         parser = argparse.ArgumentParser(parents=[tools.argparser])
         flags = parser.parse_args()
-        flow = flow_from_clientsecrets(self.CLIENT_SECRETS_JSON_PATH, scope=self.SCOPE)
+        flow = flow_from_clientsecrets(self.client_secrets_json_path, scope=self.scope)
 
         authorized_credentials = tools.run_flow(flow, self.storage, flags)
 
@@ -38,7 +44,7 @@ class Authorizor(object):
         
         If no existing credentials file is found, attempt to authorize the application
         with Google.  After the application has been authorized, the new Credential is
-        stored in CREDENTIALS_FILE_PATH.
+        stored in credentials_file_path.
         """
         #storage.get() returns None if there is no credentials file
         if self.credentials is None:
@@ -49,6 +55,14 @@ class Authorizor(object):
         return self.credentials
 
 class Grader(object):
+    """Used to update grades in the google spreadsheet.
+
+    Args:
+        worksheet (gspread.Worksheet): The google spreadsheet gradebook
+        grade_column_header (str): The assignment's header in the gradebook
+        first_name_column_header (str, optional): The first name column header in the gradebook.  Defaults to "First Name"
+        last_name_column_header (str, optional): The last name column header in the gradebook.  Defaults to "Last Name"
+    """
     def __init__(self, worksheet, grade_column_header, first_name_column_header="First Name", last_name_column_header="Last Name"):
         self._grade_column_header = grade_column_header
         self._grade_column_index = None
@@ -70,6 +84,7 @@ class Grader(object):
 
     @property
     def grade_column_header(self):
+        """Specifies the assignment's header in the spreadsheet"""
         return self._grade_column_header
 
     @grade_column_header.setter
@@ -129,7 +144,10 @@ class Grader(object):
         #We need to add 1 to each index because gspread uses 1 indexing and python uses 0 indexing
         return [(i + 1) for i in list(set(last_name_indices).intersection(first_name_indices))]
 
-    def update_grade(self, first_initial, last_name, score):
+    def add_grade(self, first_initial, last_name, score):
+        """Queues up grades that need to be updated in the spreadsheet.  Note this method
+        only queues up grades that need to be updated.  The actual update is done in batch
+        by calling update_grades"""
         student_row = self._get_row_indices_for_name(first_initial, last_name)
         if len(student_row) == 0:
             self.missing_students.append("{} {} {}\n".format(first_initial, last_name, score))
@@ -141,11 +159,13 @@ class Grader(object):
             self.grades.append(cell)
 
     def update_grades(self):
+        """Performs a batch update of grades added using the add_grade method"""
         self.worksheet.update_cells(self.grades)
 
     def save_unmergeable_grades(self):
         """Stores the grades for students that could not be merged to a file
-        and prints a warning message"""
+        and prints a warning message in the console
+        """
 
         missing_student_message = "Failed to merge the following grades because the student's name was not found in the spreadsheet:\n"
         multiple_students_message = "Failed to merge the following grades because multiple matches for the student's name were found in the spreadsheet:\n"
@@ -170,13 +190,13 @@ if __name__=='__main__':
     authorizor = Authorizor()
     credentials = authorizor.get_credentials()
     gc = gspread.authorize(credentials)
-    wks = gc.open_by_key('1SqrL7FigyTy9jhZ9pEDBYplRQaXnDf_Iz-8-MT1LN7o').sheet1
+    wks = gc.open_by_key(spreadsheetkey.id).sheet1
 
     grade_inputs = fileinput.input()
     assignment_label = grade_inputs.next().strip()
     g = Grader(wks, assignment_label)
     for line in grade_inputs:
         first_initial, last_name, score = line.split()
-        g.update_grade(first_initial, last_name, score)
+        g.add_grade(first_initial, last_name, score)
     g.update_grades()
     g.save_unmergeable_grades()
