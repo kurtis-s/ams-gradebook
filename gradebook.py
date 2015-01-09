@@ -2,7 +2,7 @@ import argparse
 import gspread
 import httplib2
 import fileinput
-import spreadsheetkey
+import spreadsheetconfig
 
 from oauth2client.file import Storage
 from oauth2client.client import flow_from_clientsecrets
@@ -190,13 +190,17 @@ if __name__=='__main__':
     authorizor = Authorizor()
     credentials = authorizor.get_credentials()
     gc = gspread.authorize(credentials)
-    wks = gc.open_by_key(spreadsheetkey.id).sheet1
+    wks = gc.open_by_key(spreadsheetconfig.key).sheet1
 
     grade_inputs = fileinput.input()
     assignment_label = grade_inputs.next().strip()
-    g = Grader(wks, assignment_label)
+    g = Grader(wks,
+            assignment_label,
+            first_name_column_header=spreadsheetconfig.first_name_column_header,
+            last_name_column_header=spreadsheetconfig.last_name_column_header)
     for line in grade_inputs:
         first_initial, last_name, score = line.split()
         g.add_grade(first_initial, last_name, score)
+
     g.update_grades()
     g.save_unmergeable_grades()

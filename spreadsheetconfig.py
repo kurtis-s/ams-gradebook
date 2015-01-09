@@ -2,4 +2,6 @@
 #
 #See https://developers.google.com/apps-script/reference/spreadsheet/spreadsheet-app#openById%28String%29
 #for details
-id = "abc1234567"
+key = "abc1234567"
+first_name_column_header = "First Name"
+last_name_column_header = "Last Name"
