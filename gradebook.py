@@ -170,7 +170,7 @@ class Grader(object):
         and prints a warning message in the console
 
         Args:
-            directory (str): Directory list of students that could not be merged should be saved
+            directory (str): Directory where list of students that could not be merged should be saved
         """
 
         missing_student_message = "Failed to merge the following grades because the student's name was not found in the spreadsheet:\n"
