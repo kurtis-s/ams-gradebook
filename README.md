@@ -21,7 +21,7 @@ Before running the script, the gradebook's Google sheets key must be set in spre
 Grades that could not be merged successfully into the gradebook are stored in unmergeable_students.txt
 after the script has finished.
 
-# Dependencies: 
+# Dependencies:
 [gspread](https://github.com/burnash/gspread)
 
 [oauth2client](https://github.com/google/oauth2client)
