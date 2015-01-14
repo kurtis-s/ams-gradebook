@@ -11,7 +11,7 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client import tools
 
 class Authorizor(object):
-    """Used to get OAuth2 credentials.  
+    """Gets OAuth2 credentials.  
     Looks for OAuth2 parameters in the path specified by the
     client_secrets_json_path (see https://developers.google.com/api-client-library/python/guide/aaa_client_secrets).
     Looks for and stores the credentials in the path specified by the credentials_file_path attribute.
@@ -44,7 +44,7 @@ class Authorizor(object):
         """Returns an instantiated Credentials object.  Refreshes the Credential's
         access token if the token is expired.
         
-        If no existing credentials file is found, attempt to authorize the application
+        If no existing credentials file is found, attempts to authorize the application
         with Google.  After the application has been authorized, the new Credential is
         stored in credentials_file_path.
         """
@@ -57,7 +57,7 @@ class Authorizor(object):
         return self.credentials
 
 class Grader(object):
-    """Used to update grades in the google spreadsheet.
+    """Updates grades in the google spreadsheet.
 
     Args:
         worksheet (gspread.Worksheet): The google spreadsheet gradebook
@@ -107,8 +107,9 @@ class Grader(object):
     def _col_index_by_cell_value(self, search_string):
         """Returns the column index for a cell with a particular string value
 
-        A LookupError is raised if multiple cells with the search string are found, or
-        if no cells with the search string are found
+        Raises:
+            LookupError:  if multiple cells with the search string are found, or 
+                no cells with the search string are found
         """
         cell_list = self.worksheet.findall(search_string)
         if len(cell_list) < 1:
@@ -161,7 +162,7 @@ class Grader(object):
             self.grades.append(cell)
 
     def update_grades(self):
-        """Performs a batch update of grades added using the add_grade method"""
+        """Sends the grades to Google sheets in a batch update"""
         self.worksheet.update_cells(self.grades)
 
     def save_unmergeable_grades(self, directory):
@@ -169,7 +170,7 @@ class Grader(object):
         and prints a warning message in the console
 
         Args:
-            directory (String): Directory list of students that could not be merged should be saved
+            directory (str): Directory list of students that could not be merged should be saved
         """
 
         missing_student_message = "Failed to merge the following grades because the student's name was not found in the spreadsheet:\n"
