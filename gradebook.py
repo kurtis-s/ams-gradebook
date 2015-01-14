@@ -33,7 +33,7 @@ class Authorizor(object):
 
     def _authorize_application(self):
         parser = argparse.ArgumentParser(parents=[tools.argparser])
-        flags = parser.parse_args()
+        flags = parser.parse_args(args=sys.argv[2:])
         flow = flow_from_clientsecrets(self.client_secrets_json_path, scope=self.scope)
 
         authorized_credentials = tools.run_flow(flow, self.storage, flags)
@@ -50,7 +50,7 @@ class Authorizor(object):
         """
         #storage.get() returns None if there is no credentials file
         if self.credentials is None:
-            credentials = self._authorize_application(storage)
+            self.credentials = self._authorize_application()
 
         self._refresh_token()
 
