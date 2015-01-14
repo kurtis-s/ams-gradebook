@@ -1,4 +1,5 @@
 credentials_file
 unmergeable_students.txt
+spreadsheetconfig.py
 *.pyc
 *.swp
