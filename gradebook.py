@@ -1,8 +1,10 @@
 import argparse
+import fileinput
 import gspread
 import httplib2
-import fileinput
+import os
 import spreadsheetconfig
+import sys
 
 from oauth2client.file import Storage
 from oauth2client.client import flow_from_clientsecrets
@@ -162,16 +164,19 @@ class Grader(object):
         """Performs a batch update of grades added using the add_grade method"""
         self.worksheet.update_cells(self.grades)
 
-    def save_unmergeable_grades(self):
+    def save_unmergeable_grades(self, directory):
         """Stores the grades for students that could not be merged to a file
         and prints a warning message in the console
+
+        Args:
+            directory (String): Directory list of students that could not be merged should be saved
         """
 
         missing_student_message = "Failed to merge the following grades because the student's name was not found in the spreadsheet:\n"
         multiple_students_message = "Failed to merge the following grades because multiple matches for the student's name were found in the spreadsheet:\n"
 
         if (len(self.missing_students) > 0) or (len(self.multiple_match_students) > 0):
-            with open('unmergeable_students.txt' ,'w') as unmergeable_file:
+            with open(os.path.join(directory, 'unmergeable_students.txt') ,'w') as unmergeable_file:
                 if(len(self.missing_students) > 0):
                     unmergeable_file.write(missing_student_message)
                     unmergeable_file.writelines(self.missing_students)
@@ -182,7 +187,7 @@ class Grader(object):
                     unmergeable_file.writelines(self.multiple_match_students)
 
             #Print out the grades that couldn't be merged the console for convenience
-            with open('unmergeable_students.txt' ,'r') as unmergeable_file:
+            with open(os.path.join(directory, 'unmergeable_students.txt') ,'r') as unmergeable_file:
                 print unmergeable_file.read()
 
 
@@ -203,4 +208,4 @@ if __name__=='__main__':
         g.add_grade(first_initial, last_name, score)
 
     g.update_grades()
-    g.save_unmergeable_grades()
+    g.save_unmergeable_grades(os.path.dirname(sys.argv[1]))
