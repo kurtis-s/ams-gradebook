@@ -205,8 +205,10 @@ if __name__=='__main__':
             first_name_column_header=spreadsheetconfig.first_name_column_header,
             last_name_column_header=spreadsheetconfig.last_name_column_header)
     for line in grade_inputs:
-        first_initial, last_name, score = line.split()
-        g.add_grade(first_initial, last_name, score)
+        #Ignore empty lines and comments
+        if (line.strip()) and (line[0] != '#'):
+            first_initial, last_name, score = line.split()
+            g.add_grade(first_initial, last_name, score)
 
     g.update_grades()
     g.save_unmergeable_grades(os.path.dirname(sys.argv[1]))
