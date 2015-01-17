@@ -241,13 +241,19 @@ def main():
     g = Grader(
         wks,
         assignment_label,
-        first_name_column_header=spreadsheetconfig.first_name_column_header,
-        last_name_column_header=spreadsheetconfig.last_name_column_header)
+        spreadsheetconfig.first_name_column_header,
+        spreadsheetconfig.last_name_column_header)
     for line in grade_inputs:
         # Ignore empty lines and comments
         if (line.strip()) and (line[0] != '#'):
-            first_initial, last_name, score = line.split()
-            g.add_grade(first_initial, last_name, score)
+            try:
+                first_name, last_name, score = line.split()
+            except ValueError:
+                print ("Failed to parse first name, last name, and score from "
+                       "line: {}".format(line))
+                print "Exiting."
+                sys.exit(1)
+            g.add_grade(first_name[0], last_name, score)
 
     g.update_grades()
     g.save_unmergeable_grades(os.path.dirname(sys.argv[1]))
