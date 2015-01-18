@@ -62,15 +62,15 @@ class Authorizor(object):
 
 
 class Grader(object):
-    """Updates grades in the google spreadsheet.
+    """Updates grades in the Google sheet.
 
     Args:
-        worksheet (gspread.Worksheet): The google spreadsheet gradebook
-        grade_column_header (str): The assignment's header in the gradebook
-        first_name_column_header (str, optional): The first name column header
-            in the gradebook.
-        last_name_column_header (str, optional): The last name column header in
-            the gradebook.
+      worksheet (gspread.Worksheet): The Google sheet gradebook
+      grade_column_header (str): The assignment's header in the gradebook
+      first_name_column_header (str): The first name column header
+        in the gradebook.
+      last_name_column_header (str): The last name column header in
+        the gradebook.
     """
     def __init__(self, worksheet, grade_column_header, first_name_column_header,
                  last_name_column_header):
@@ -123,8 +123,8 @@ class Grader(object):
         """Returns the column index for a cell with a particular string value
 
         Raises:
-            LookupError: If multiple cells with the search string are found, or
-                no cells with the search string are found
+          LookupError: If multiple cells with the search string are found, or
+            no cells with the search string are found
         """
         cell_list = self.worksheet.findall(search_string)
         if len(cell_list) < 1:
@@ -180,7 +180,8 @@ class Grader(object):
     def add_grade(self, first_initial, last_name, score):
         """Queues up grades that need to be updated in the spreadsheet.  Note
         this method only queues up grades that need to be updated.  The actual
-        update is done in batch by calling update_grades"""
+        update is done in batch by calling update_grades
+        """
         student_row = self._get_row_indices_for_name(first_initial, last_name)
         if len(student_row) == 0:
             self.missing_students.append("{} {} {}\n".format(
@@ -203,8 +204,8 @@ class Grader(object):
         and prints a warning message in the console
 
         Args:
-            directory (str): Directory where list of students that could not be
-                merged should be saved
+          directory (str): Directory where list of students that could not be
+            merged should be saved
         """
 
         missing_student_message = (
@@ -230,20 +231,27 @@ class Grader(object):
                 print unmergeable_file.read()
 
 
-def main():
+def open_worksheet():
+    """Opens Google Sheet
+
+    Returns:
+      gspread.Worksheet: Worksheet specified in spreadsheetconfig
+    """
     authorizor = Authorizor()
     credentials = authorizor.get_credentials()
     gc = gspread.authorize(credentials)
-    wks = gc.open_by_key(spreadsheetconfig.key).sheet1
 
-    grade_inputs = fileinput.input()
-    assignment_label = grade_inputs.next().strip()
-    g = Grader(
-        wks,
-        assignment_label,
-        spreadsheetconfig.first_name_column_header,
-        spreadsheetconfig.last_name_column_header)
-    for line in grade_inputs:
+    return gc.open_by_key(spreadsheetconfig.key).sheet1
+
+
+def parse_grades(fp, grader):
+    """Parses student grades from a file and adds them to the grader
+
+    Args:
+      fp (file): File-like object containing list of student names and grades
+      grader (Grader): Grader to take the grades parsed from fp
+    """
+    for line in fp:
         # Ignore empty lines and comments
         if (line.strip()) and (line[0] != '#'):
             try:
@@ -253,10 +261,31 @@ def main():
                        "line: {}".format(line))
                 print "Exiting."
                 sys.exit(1)
-            g.add_grade(first_name[0], last_name, score)
+            grader.add_grade(first_name[0], last_name, score)
 
-    g.update_grades()
-    g.save_unmergeable_grades(os.path.dirname(sys.argv[1]))
+
+def input_new_grades(worksheet):
+    """Inputs grades into the Google Sheet
+
+    Args:
+      worksheet (gspread.Worksheet): Google sheet where grades will be entered
+    """
+    grade_inputs = fileinput.input()
+    assignment_label = grade_inputs.next().strip()
+    grader = Grader(
+        worksheet,
+        assignment_label,
+        spreadsheetconfig.first_name_column_header,
+        spreadsheetconfig.last_name_column_header)
+    parse_grades(grade_inputs, grader)
+    grader.update_grades()
+    grader.save_unmergeable_grades(os.path.dirname(sys.argv[1]))
+
+
+def main():
+    worksheet = open_worksheet()
+    input_new_grades(worksheet)
+
 
 if __name__ == '__main__':
     main()
