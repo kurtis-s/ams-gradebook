@@ -207,7 +207,6 @@ class Grader(object):
           directory (str): Directory where list of students that could not be
             merged should be saved
         """
-
         missing_student_message = (
             "Failed to merge the following grades because the student's name "
             "was not found in the spreadsheet:\n")
